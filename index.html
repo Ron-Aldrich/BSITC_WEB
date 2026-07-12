@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BSIT - 1C | Online Attendance Monitoring System</title>
+<meta name="description" content="Official online attendance monitoring system for BSIT - 1C, a Bachelor of Science in Information Technology section. Developed by Ron Aldrich.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+  /* ============================
+     0. TOKENS
+  ============================ */
+  :root{
+    --white:      #ffffff;
+    --bg-alt:     #f5f8fd;
+    --blue-50:    #eaf1ff;
+    --blue-100:   #d3e4ff;
+    --blue-500:   #1c5cff;
+    --blue-600:   #0f47db;
+    --blue-900:   #0a1f4d;
+    --black:      #0a0b0d;
+    --ink-70:     rgba(10,11,13,0.7);
+    --ink-50:     rgba(10,11,13,0.5);
+    --line:       rgba(10,11,13,0.08);
+    --line-blue:  rgba(28,92,255,0.18);
+
+    --font-display: 'Space Grotesk', 'Segoe UI', sans-serif;
+    --font-body:    'Inter', 'Segoe UI', sans-serif;
+    --font-mono:    'JetBrains Mono', 'Courier New', monospace;
+
+    --max-w: 1180px;
+    --radius: 14px;
+    --shadow-sm: 0 1px 2px rgba(10,20,50,0.06), 0 1px 1px rgba(10,20,50,0.04);
+    --shadow-md: 0 12px 32px -12px rgba(15,40,120,0.18);
+    --shadow-lg: 0 24px 60px -20px rgba(10,20,60,0.28);
+    --ease: cubic-bezier(.22,1,.36,1);
+  }
+
+  *,*::before,*::after{ box-sizing:border-box; }
+  html{ scroll-behavior:smooth; }
+  body{
+    margin:0;
+    font-family:var(--font-body);
+    color:var(--black);
+    background:var(--white);
+    -webkit-font-smoothing:antialiased;
+    line-height:1.6;
+    overflow-x:hidden;
+  }
+  img,svg{ display:block; max-width:100%; }
+  a{ color:inherit; text-decoration:none; }
+  ul{ margin:0; padding:0; list-style:none; }
+  h1,h2,h3,h4{ font-family:var(--font-display); margin:0; line-height:1.1; letter-spacing:-0.01em; }
+  p{ margin:0; }
+  button{ font-family:inherit; cursor:pointer; }
+  .wrap{ max-width:var(--max-w); margin:0 auto; padding:0 24px; }
+  .eyebrow{
+    font-family:var(--font-mono);
+    font-size:0.75rem;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--blue-600);
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+  }
+  .eyebrow::before{
+    content:"";
+    width:7px; height:7px;
+    border-radius:50%;
+    background:var(--blue-500);
+    box-shadow:0 0 0 4px var(--blue-50);
+  }
+  section{ position:relative; }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important; scroll-behavior:auto !important; }
+  }
+
+  /* reveal-on-scroll */
+  .reveal{ opacity:0; transform:translateY(18px); transition:opacity .7s var(--ease), transform .7s var(--ease); }
+  .reveal.in{ opacity:1; transform:translateY(0); }
+
+  /* ============================
+     1. NAVIGATION
+  ============================ */
+  .nav{
+    position:fixed; top:0; left:0; right:0; z-index:100;
+    background:rgba(255,255,255,0.78);
+    backdrop-filter:blur(14px) saturate(160%);
+    -webkit-backdrop-filter:blur(14px) saturate(160%);
+    border-bottom:1px solid transparent;
+    transition:border-color .3s var(--ease), box-shadow .3s var(--ease);
+  }
+  .nav.scrolled{ border-bottom-color:var(--line); box-shadow:0 4px 24px -12px rgba(10,20,60,0.12); }
+  .nav-inner{
+    max-width:var(--max-w); margin:0 auto; padding:0 24px;
+    height:68px; display:flex; align-items:center; justify-content:space-between;
+  }
+  .brand{ display:flex; align-items:center; gap:10px; font-family:var(--font-display); font-weight:700; font-size:1.05rem; letter-spacing:-0.01em; }
+  .brand-mark{
+    width:34px; height:34px; border-radius:9px;
+    background:linear-gradient(150deg, var(--blue-500), var(--blue-900));
+    display:flex; align-items:center; justify-content:center;
+    color:#fff; font-family:var(--font-mono); font-weight:500; font-size:0.68rem;
+    box-shadow:var(--shadow-sm);
+  }
+  .nav-links{ display:flex; align-items:center; gap:2px; }
+  .nav-links a{
+    position:relative;
+    padding:9px 16px;
+    font-size:0.92rem; font-weight:500;
+    color:var(--ink-70);
+    border-radius:8px;
+    transition:color .25s ease, background .25s ease;
+  }
+  .nav-links a:hover{ color:var(--black); background:var(--blue-50); }
+  .nav-links a.active{ color:var(--blue-600); }
+  .nav-cta{
+    display:inline-flex; align-items:center; gap:8px;
+    background:var(--black); color:#fff;
+    padding:9px 18px; border-radius:9px;
+    font-size:0.88rem; font-weight:600;
+    transition:transform .25s var(--ease), background .25s ease, box-shadow .25s ease;
+  }
+  .nav-cta:hover{ background:var(--blue-600); transform:translateY(-1px); box-shadow:var(--shadow-md); }
+
+  .burger{
+    display:none; flex-direction:column; gap:5px;
+    width:38px; height:38px; border:none; background:none;
+    align-items:center; justify-content:center;
+  }
+  .burger span{ width:20px; height:2px; background:var(--black); border-radius:2px; transition:transform .3s var(--ease), opacity .3s var(--ease); }
+  .burger.open span:nth-child(1){ transform:translateY(7px) rotate(45deg); }
+  .burger.open span:nth-child(2){ opacity:0; }
+  .burger.open span:nth-child(3){ transform:translateY(-7px) rotate(-45deg); }
+
+  .mobile-panel{
+    position:fixed; inset:68px 0 0 0; z-index:99;
+    background:var(--white);
+    transform:translateY(-8px); opacity:0; visibility:hidden;
+    transition:opacity .3s var(--ease), transform .3s var(--ease), visibility .3s;
+    display:flex; flex-direction:column; padding:20px 24px; gap:4px;
+  }
+  .mobile-panel.open{ opacity:1; transform:translateY(0); visibility:visible; }
+  .mobile-panel a{ padding:16px 4px; font-size:1.1rem; font-weight:600; border-bottom:1px solid var(--line); }
+  .mobile-panel .nav-cta{ margin-top:18px; justify-content:center; padding:14px; }
+
+  /* ============================
+     2. HERO
+  ============================ */
+  .hero{
+    padding:150px 0 100px;
+    background:
+      radial-gradient(600px 320px at 85% -10%, var(--blue-50), transparent 60%),
+      var(--white);
+    overflow:hidden;
+  }
+  .hero-grid{
+    display:grid;
+    grid-template-columns:1.1fr 0.9fr;
+    gap:56px;
+    align-items:center;
+  }
+  .hero-copy .eyebrow{ margin-bottom:20px; }
+  .caption-block{ display:flex; flex-direction:column; gap:10px; margin-bottom:22px; }
+  .caption-univ{
+    font-family:var(--font-mono);
+    font-size:0.78rem;
+    letter-spacing:0.06em;
+    color:var(--ink-50);
+  }
+  .caption-block .eyebrow{ margin-bottom:0; }
+  .hero h1{
+    font-size:clamp(2.6rem, 6.4vw, 4.6rem);
+    font-weight:700;
+    color:var(--black);
+  }
+  .hero h1 span{
+    color:var(--blue-600);
+  }
+  .hero-sub{
+    margin-top:22px;
+    font-size:clamp(1rem, 1.6vw, 1.18rem);
+    color:var(--ink-70);
+    max-width:520px;
+  }
+  .hero-actions{ display:flex; flex-wrap:wrap; align-items:center; gap:16px; margin-top:36px; }
+
+  .btn-primary{
+    display:inline-flex; align-items:center; gap:10px;
+    background:var(--blue-500); color:#fff;
+    padding:15px 26px; border-radius:11px;
+    font-weight:600; font-size:0.98rem;
+    box-shadow:0 14px 30px -10px rgba(28,92,255,0.5);
+    border:1px solid var(--blue-500);
+    transition:transform .25s var(--ease), box-shadow .25s var(--ease), background .25s ease;
+  }
+  .btn-primary:hover{ transform:translateY(-2px); box-shadow:0 18px 36px -8px rgba(28,92,255,0.6); background:var(--blue-600); }
+  .btn-primary svg{ transition:transform .25s var(--ease); }
+  .btn-primary:hover svg{ transform:translate(3px,-3px); }
+
+  .hero-meta{
+    display:flex; gap:30px; margin-top:48px; padding-top:28px; border-top:1px solid var(--line);
+    flex-wrap:wrap;
+  }
+  .hero-meta div strong{ display:block; font-family:var(--font-display); font-size:1.5rem; }
+  .hero-meta div span{ font-size:0.82rem; color:var(--ink-50); }
+
+  /* signature visual: node network / terminal card */
+  .hero-visual{ position:relative; height:420px; }
+  .term-card{
+    position:absolute; inset:0;
+    background:var(--blue-900);
+    border-radius:20px;
+    box-shadow:var(--shadow-lg);
+    overflow:hidden;
+    display:flex; flex-direction:column;
+  }
+  .term-bar{
+    display:flex; align-items:center; gap:7px;
+    padding:14px 18px;
+    background:rgba(255,255,255,0.04);
+    border-bottom:1px solid rgba(255,255,255,0.08);
+  }
+  .term-bar i{ width:10px; height:10px; border-radius:50%; background:rgba(255,255,255,0.18); }
+  .term-bar span{ margin-left:8px; font-family:var(--font-mono); font-size:0.72rem; color:rgba(255,255,255,0.4); }
+  .term-body{ padding:22px 22px 0; font-family:var(--font-mono); font-size:0.86rem; color:#cfe0ff; flex:1; }
+  .term-line{ opacity:0; white-space:pre-wrap; margin-bottom:10px; animation:typeIn .5s var(--ease) forwards; }
+  .term-line b{ color:#7fa8ff; font-weight:500; }
+  .cursor{ display:inline-block; width:7px; height:15px; background:#7fa8ff; margin-left:2px; vertical-align:middle; animation:blink 1s steps(1) infinite; }
+  @keyframes typeIn{ to{ opacity:1; } }
+  @keyframes blink{ 50%{ opacity:0; } }
+
+  .node-canvas{ position:absolute; inset:0; z-index:-1; opacity:0.5; }
+
+  /* ============================
+     3. SECTION HEADS
+  ============================ */
+  .section-head{ max-width:640px; margin-bottom:52px; }
+  .section-head .eyebrow{ margin-bottom:16px; }
+  .section-head h2{ font-size:clamp(1.9rem, 3.6vw, 2.6rem); font-weight:700; }
+  .section-head p{ margin-top:16px; color:var(--ink-70); font-size:1.03rem; }
+
+  /* ============================
+     4. ABOUT
+  ============================ */
+  .about{ padding:110px 0; background:var(--bg-alt); }
+  .about-grid{ display:grid; grid-template-columns:1fr 1fr; gap:64px; align-items:center; }
+  .about-text p{ color:var(--ink-70); font-size:1.03rem; margin-bottom:18px; }
+  .about-text p:last-child{ margin-bottom:0; }
+  .about-pillars{ display:flex; gap:14px; margin-top:30px; flex-wrap:wrap; }
+  .pillar{
+    font-family:var(--font-mono); font-size:0.78rem;
+    padding:8px 14px; border-radius:100px;
+    border:1px solid var(--line-blue);
+    background:var(--white); color:var(--blue-600);
+  }
+  .about-panel{
+    background:var(--white);
+    border:1px solid var(--line);
+    border-radius:20px;
+    padding:38px;
+    box-shadow:var(--shadow-md);
+  }
+  .about-stat{ display:flex; align-items:baseline; gap:10px; padding:18px 0; border-bottom:1px solid var(--line); }
+  .about-stat:last-child{ border-bottom:none; }
+  .about-stat strong{ font-family:var(--font-display); font-size:2rem; color:var(--blue-600); min-width:78px; }
+  .about-stat span{ color:var(--ink-70); font-size:0.94rem; }
+
+  /* ============================
+     7. FOOTER
+  ============================ */
+  .site-footer{ background:var(--black); color:rgba(255,255,255,0.72); padding:72px 0 28px; }
+  .footer-grid{ display:grid; grid-template-columns:1.4fr 1fr 1fr 1fr; gap:44px; padding-bottom:48px; border-bottom:1px solid rgba(255,255,255,0.1); }
+  .footer-brand .brand{ color:#fff; margin-bottom:14px; }
+  .footer-brand p{ font-size:0.92rem; color:rgba(255,255,255,0.55); max-width:280px; }
+  .footer-social{ display:flex; gap:10px; margin-top:22px; }
+  .footer-social a{
+    width:38px; height:38px; border-radius:9px;
+    border:1px solid rgba(255,255,255,0.14);
+    display:flex; align-items:center; justify-content:center;
+    color:rgba(255,255,255,0.7);
+    transition:background .25s ease, border-color .25s ease, color .25s ease, transform .25s var(--ease);
+  }
+  .footer-social a:hover{ background:var(--blue-500); border-color:var(--blue-500); color:#fff; transform:translateY(-3px); }
+  .footer-col h4{ font-size:0.82rem; text-transform:uppercase; letter-spacing:0.08em; color:rgba(255,255,255,0.45); margin-bottom:18px; font-family:var(--font-mono); font-weight:500; }
+  .footer-col a, .footer-col p{ display:block; font-size:0.92rem; margin-bottom:12px; color:rgba(255,255,255,0.72); transition:color .2s ease; }
+  .footer-col a:hover{ color:#fff; }
+  .footer-bottom{ display:flex; justify-content:space-between; align-items:center; padding-top:26px; flex-wrap:wrap; gap:12px; font-size:0.82rem; color:rgba(255,255,255,0.42); }
+  .footer-bottom .tag{ font-family:var(--font-mono); }
+
+  /* ============================
+     8. RESPONSIVE
+  ============================ */
+  @media (max-width:1000px){
+    .hero-grid{ grid-template-columns:1fr; }
+    .hero-visual{ height:340px; order:-1; }
+    .about-grid{ grid-template-columns:1fr; }
+    .footer-grid{ grid-template-columns:1fr 1fr; row-gap:36px; }
+  }
+  @media (max-width:760px){
+    .nav-links{ display:none; }
+    .burger{ display:flex; }
+    .hero{ padding:130px 0 70px; }
+    .hero-meta{ gap:22px; }
+    .footer-grid{ grid-template-columns:1fr; }
+    .footer-bottom{ flex-direction:column; align-items:flex-start; }
+    .about{ padding:80px 0; }
+  }
+  @media (max-width:420px){
+    .hero-actions{ flex-direction:column; align-items:stretch; }
+    .btn-primary{ justify-content:center; }
+  }
+
+  /* focus visibility */
+  a:focus-visible, button:focus-visible{ outline:2px solid var(--blue-500); outline-offset:3px; border-radius:6px; }
+</style>
+</head>
+<body>
+
+<!-- ============================ NAV ============================ -->
+<header class="nav" id="nav">
+  <div class="nav-inner">
+    <a href="#home" class="brand"><span class="brand-mark">1C</span>BSIT&nbsp;-&nbsp;1C</a>
+    <nav class="nav-links" aria-label="Primary">
+      <a href="#home" class="nav-cta">Homepage</a>
+    </nav>
+    <button class="burger" id="burger" aria-label="Toggle menu" aria-expanded="false"><span></span><span></span><span></span></button>
+  </div>
+  <div class="mobile-panel" id="mobilePanel">
+    <a href="#home" class="nav-cta">Homepage</a>
+  </div>
+</header>
+
+<!-- ============================ HERO ============================ -->
+<section class="hero" id="home">
+  <div class="wrap hero-grid">
+    <div class="hero-copy reveal">
+      <div class="caption-block">
+        <span class="caption-univ">Cagayan State University — Carig Campus</span>
+        <span class="eyebrow">BSIT - 1C</span>
+      </div>
+      <h1>BSIT&nbsp;-&nbsp;<span>1C</span></h1>
+      <p class="hero-sub">The official online attendance monitoring system for BSIT - 1C, a Bachelor of Science in Information Technology section. Built to log, track, and manage attendance digitally — in one shared dashboard for the whole class.</p>
+      <div class="hero-actions">
+        <a class="btn-primary" href="#home">
+          Homepage
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 12L12 4M12 4H5M12 4V11" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+      </div>
+      <div class="hero-meta">
+        <div><strong>1C</strong><span>Section code</span></div>
+        <div><strong>BSIT</strong><span>Program</span></div>
+        <div><strong>Y1</strong><span>Year level</span></div>
+      </div>
+    </div>
+    <div class="hero-visual reveal">
+      <canvas class="node-canvas" id="nodeCanvas"></canvas>
+      <div class="term-card">
+        <div class="term-bar"><i></i><i></i><i></i><span>bsit1c — attendance</span></div>
+        <div class="term-body">
+          <div class="term-line" style="animation-delay:.2s">$ whoami<br><b>bsit-1c</b></div>
+          <div class="term-line" style="animation-delay:.7s">$ status --attendance<br>→ <b>42 students</b> · logged today</div>
+          <div class="term-line" style="animation-delay:1.2s">$ system<br>→ online attendance monitoring<span class="cursor"></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ ABOUT ============================ -->
+<section class="about" id="about">
+  <div class="wrap about-grid">
+    <div class="about-text reveal">
+      <div class="section-head" style="margin-bottom:26px;">
+        <span class="eyebrow">About the system</span>
+        <h2>Attendance monitoring, built by the section it serves</h2>
+      </div>
+      <p>BSIT - 1C is a first-year section within the Bachelor of Science in Information Technology program. To keep attendance accurate and easy to manage, the class runs on its own online attendance monitoring system.</p>
+      <p>Instead of paper logs, attendance is recorded and tracked digitally in a shared dashboard — giving the whole class a clear, always up-to-date record of who's present, every day.</p>
+      <div class="about-pillars">
+        <span class="pillar">Collaboration</span>
+        <span class="pillar">Technology</span>
+        <span class="pillar">Learning</span>
+        <span class="pillar">Innovation</span>
+      </div>
+    </div>
+    <div class="about-panel reveal">
+      <div class="about-stat"><strong>01</strong><span>Daily attendance logged digitally — no more paper sheets to lose or misread.</span></div>
+      <div class="about-stat"><strong>02</strong><span>One shared dashboard for attendance records and student information.</span></div>
+      <div class="about-stat"><strong>03</strong><span>Built for BSIT - 1C, by BSIT - 1C, to solve a real class need.</span></div>
+    </div>
+  </div>
+</section>
+
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="#home" class="brand"><span class="brand-mark">1C</span>BSIT&nbsp;-&nbsp;1C</a>
+        <p>Online attendance monitoring system for BSIT - 1C, a Bachelor of Science in Information Technology section, built on collaboration, technology, learning, and innovation.</p>
+        <div class="footer-social">
+          <a href="#" aria-label="Facebook"><svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M14 9h3V5h-3c-2.2 0-4 1.8-4 4v2H8v4h2v6h4v-6h3l1-4h-4V9c0-.6.4-1 1-1Z" fill="currentColor"/></svg></a>
+          <a href="#" aria-label="Email"><svg width="17" height="17" viewBox="0 0 24 24" fill="none"><rect x="3.5" y="5.5" width="17" height="13" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M4.5 7l7.5 6 7.5-6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+          <a href="#" aria-label="GitHub"><svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.46-1.16-1.11-1.47-1.11-1.47-.9-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.9 1.53 2.34 1.09 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.56-1.11-4.56-4.95 0-1.1.39-1.99 1.03-2.69-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02a9.4 9.4 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.69 0 3.85-2.35 4.7-4.58 4.94.36.31.68.92.68 1.85v2.75c0 .26.18.58.69.48A10 10 0 0 0 12 2Z" fill="currentColor"/></svg></a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Navigate</h4>
+        <a href="#home">Homepage</a>
+      </div>
+      <div class="footer-col">
+        <h4>Section</h4>
+        <p>BSIT - 1C</p>
+        <p>Cagayan State University</p>
+        <p>Carig Campus</p>
+      </div>
+      <div class="footer-col">
+        <h4>Contact</h4>
+        <p>bsit1c@example.edu</p>
+        <p>@bsit1c</p>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span id="year" class="tag">© 2026 BSIT - 1C. All rights reserved.</span>
+      <span class="tag">Developed by Ron Aldrich</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---- Nav scroll shadow ---- */
+  var nav = document.getElementById('nav');
+  function onScroll(){
+    nav.classList.toggle('scrolled', window.scrollY > 8);
+  }
+  document.addEventListener('scroll', onScroll, { passive:true });
+  onScroll();
+
+  /* ---- Mobile menu ---- */
+  var burger = document.getElementById('burger');
+  var panel = document.getElementById('mobilePanel');
+  function closeMenu(){
+    burger.classList.remove('open');
+    panel.classList.remove('open');
+    burger.setAttribute('aria-expanded','false');
+  }
+  burger.addEventListener('click', function(){
+    var isOpen = panel.classList.toggle('open');
+    burger.classList.toggle('open', isOpen);
+    burger.setAttribute('aria-expanded', String(isOpen));
+  });
+  panel.querySelectorAll('a').forEach(function(a){
+    a.addEventListener('click', closeMenu);
+  });
+
+  /* ---- Reveal on scroll ---- */
+  var reveals = document.querySelectorAll('.reveal');
+  var ro = new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if(entry.isIntersecting){
+        entry.target.classList.add('in');
+        ro.unobserve(entry.target);
+      }
+    });
+  }, { threshold:0.15 });
+  reveals.forEach(function(el){ ro.observe(el); });
+
+  /* ---- Footer year ---- */
+  document.getElementById('year').textContent = '© ' + new Date().getFullYear() + ' BSIT - 1C. All rights reserved.';
+
+  /* ---- Node network canvas (hero signature, subtle) ---- */
+  var canvas = document.getElementById('nodeCanvas');
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(canvas && !reduceMotion){
+    var ctx = canvas.getContext('2d');
+    var w, h, nodes = [];
+    function resize(){
+      var rect = canvas.parentElement.getBoundingClientRect();
+      w = canvas.width = rect.width;
+      h = canvas.height = rect.height;
+    }
+    function initNodes(){
+      var count = Math.max(14, Math.floor((w*h)/26000));
+      nodes = [];
+      for(var i=0;i<count;i++){
+        nodes.push({
+          x: Math.random()*w, y: Math.random()*h,
+          vx:(Math.random()-0.5)*0.35, vy:(Math.random()-0.5)*0.35
+        });
+      }
+    }
+    function tick(){
+      ctx.clearRect(0,0,w,h);
+      nodes.forEach(function(n){
+        n.x += n.vx; n.y += n.vy;
+        if(n.x<0||n.x>w) n.vx*=-1;
+        if(n.y<0||n.y>h) n.vy*=-1;
+      });
+      for(var i=0;i<nodes.length;i++){
+        for(var j=i+1;j<nodes.length;j++){
+          var a=nodes[i], b=nodes[j];
+          var dx=a.x-b.x, dy=a.y-b.y;
+          var dist=Math.sqrt(dx*dx+dy*dy);
+          if(dist<130){
+            ctx.strokeStyle='rgba(28,92,255,'+(1-dist/130)*0.5+')';
+            ctx.lineWidth=1;
+            ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
+          }
+        }
+      }
+      nodes.forEach(function(n){
+        ctx.fillStyle='rgba(15,71,219,0.55)';
+        ctx.beginPath(); ctx.arc(n.x,n.y,2.1,0,Math.PI*2); ctx.fill();
+      });
+      requestAnimationFrame(tick);
+    }
+    resize(); initNodes(); tick();
+    window.addEventListener('resize', function(){ resize(); initNodes(); }, { passive:true });
+  }
+})();
+</script>
+
+</body>
+</html>
